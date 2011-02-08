@@ -38,18 +38,22 @@ cat &lt;&lt; 'EOF1'
 outputvar = TextMate.system(cmd, function (fake) {});
 //  .onreaderror not require as redirecting std err to std out
 outputvar.onreadoutput = outputHandler;
+outputvar.onreaderror = outputHandler;
 }
 
 function outputHandler (currentStringOnStdout)
 {
 accumulator += currentStringOnStdout;
-document.getElementById("results").innerText = accumulator;
-}
+var restElmt = document.getElementById("results");
+restElmt.innerText = accumulator;
 
-function donelaunch()
-{
-document.getElementById("results").innerText = "Stopped";
-outputvar.cancel();
+if(accumulator.indexOf("BUILD SUCCESSFUL") &gt;= 0) {
+    restElmt.style.backgroundColor='#CCFFCC';
+ }
+if(accumulator.indexOf("BUILD FAILED") &gt;= 0) {
+    restElmt.style.backgroundColor='#990033';
+    restElmt.style.color='#FFFFFF';
+ }
 }
 &lt;/script&gt;
 &lt;/head&gt;
