@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>beforeRunningCommand</key>
+	<string>saveActiveFile</string>
+	<key>command</key>
+	<string>#!/bin/bash
+. ~/.profile
+tsts="$TM_SELECTED_TEXT"
+gradlepath=$(/usr/bin/which "gradle")        # starts the "date" command, captures its output
+if [ -z "$TM_SELECTED_TEXT" ]
+then
+	deftasks=`cat $TM_FILEPATH | grep -Po "(?&lt;=defaultTasks\s\")(.*)(?=\")"`
+	# if deftask is null open dialog to ask for tasks to execute
+	if [ -z "$deftasks" ]
+	then
+		res=$("$TM_SUPPORT_PATH/bin/CocoaDialog.app/Contents/MacOS/CocoaDialog" inputbox --title "What task to run" \
+    		--informative-text "Please give me a task to execute:" \
+   		--button1 "Okay" --button2 "Cancel")
+		[[ $(head -n1 &lt;&lt;&lt;"$res") == "2" ]] &amp;&amp; exit_discard
+		res=$(tail -n1 &lt;&lt;&lt;"$res")
+		tsts="$res"
+	else
+		echo "Executing default task(s): $deftasks"
+	fi
+fi
+echo "&lt;html&gt;"
+echo "&lt;head&gt;"
+echo "&lt;script type=\"text/javascript\"&gt;"
+echo "var outputvar = null;"
+echo "var accumulator =\"\";"
+echo "var tasks = \"$tsts\";"
+echo "function launchbuild()"
+echo "{"
+echo "var cmd = \"$gradlepath -b $TM_FILEPATH \" + tasks;"
+cat &lt;&lt; 'EOF1'
+outputvar = TextMate.system(cmd, function (fake) {});
+//  .onreaderror not require as redirecting std err to std out
+outputvar.onreadoutput = outputHandler;
+}
+
+function outputHandler (currentStringOnStdout)
+{
+accumulator += currentStringOnStdout;
+document.getElementById("results").innerText = accumulator;
+}
+
+function donelaunch()
+{
+document.getElementById("results").innerText = "Stopped";
+outputvar.cancel();
+}
+&lt;/script&gt;
+&lt;/head&gt;
+&lt;body onload="launchbuild()"&gt;
+&lt;pre&gt;
+&lt;div id="results"&gt;
+Running Gradle
+&lt;/div&gt;
+&lt;/pre&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+EOF1</string>
+	<key>fallbackInput</key>
+	<string>document</string>
+	<key>input</key>
+	<string>selection</string>
+	<key>keyEquivalent</key>
+	<string>^~@r</string>
+	<key>name</key>
+	<string>Run Gradle task</string>
+	<key>output</key>
+	<string>showAsHTML</string>
+	<key>uuid</key>
+	<string>7B506077-77F1-4978-B797-3A0F0EFE6863</string>
+</dict>
+</plist>
